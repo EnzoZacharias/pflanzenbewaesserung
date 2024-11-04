@@ -49,7 +49,7 @@ def getGeneralData(macAdd):
 
 def getMeasurementDataHist(macAdd):
     now = datetime.now()
-    two_weeks_ago = now - timedelta(weeks=2)
+    two_weeks_ago = now - timedelta(hours=72)
     data = []
     measurementData = db.session.query(Messdaten).join(Pflanze).filter(
         Messdaten.Pflanzen_ID == macAdd,
@@ -74,7 +74,6 @@ def getMeasurementDataNow(macAdd):
         Messdaten.Zeitstempel <= now
     ).order_by(Messdaten.Zeitstempel.desc()).first()
 
-    print(element)
     if element is None:
         data = {
         'zeitstempel': "N/A",

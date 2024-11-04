@@ -39,43 +39,6 @@
     <div class="my-4">
         <a href="{{ url_for('pflanze_hinzufuegen') }}" class="btn btn-primary">Neue Pflanze hinzufügen</a>
     </div>
-
-    <div class="table-responsive">
-        <table class="table table-striped table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th>MAC-Adresse</th>
-                    <th>IP-Adresse</th>
-                    <th>Name</th>
-                    <th>Standort</th>
-                    <th>Temperatur (min/max)</th>
-                    <th>Sonnenintensität (min/max)</th>
-                    <th>Sonnendauer (max)</th>
-                    <th>Bodenfeuchtigkeit (min/max)</th>
-                    <th>Luftfeuchtigkeit (min/max)</th>
-                    <th>Gepflanzt am</th>
-                    <th>Zuletzt gegossen</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pflanze in plants %}
-                    <tr>
-                        <td>{{ pflanze.mac }}</td>
-                        <td>{{ pflanze.ip }}</td>
-                        <td>{{ pflanze.name }}</td>
-                        <td>{{ pflanze.place }}</td>
-                        <td>{{ pflanze.tem_min }} / {{ pflanze.tem_max }}</td>
-                        <td>{{ pflanze.sunInt_min }} / {{ pflanze.sunInt_max }}</td>
-                        <td>{{ pflanze.sunDur_max }}</td>
-                        <td>{{ pflanze.moisture_min }} / {{ pflanze.moisture_max }}</td>
-                        <td>{{ pflanze.air_min }} / {{ pflanze.air_max }}</td>
-                        <td>{{ pflanze.planted }}</td>
-                        <td>{{ pflanze.pour }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
