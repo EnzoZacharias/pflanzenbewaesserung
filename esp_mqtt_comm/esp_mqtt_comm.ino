@@ -4,7 +4,7 @@
 #include <SPI.h>
 
 const char* ssid = "FRITZ!Box 7490";
-const char* password = "0151214587014554";
+const char* password = "**********************";
 
 const char* mqtt_server = "abf5695669a8496cbb7cb383b743fdcc.s1.eu.hivemq.cloud";
 const char* mqtt_username = "EnzoZacharias";
