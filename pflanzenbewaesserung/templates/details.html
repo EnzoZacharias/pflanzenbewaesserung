@@ -41,38 +41,38 @@
 
     <div class="row my-4 text-center">
         <div class="col-md-3">
-            <div class="card bg-light mb-3">
+            <div class="card temperature-card custom-card mb-3">
                 <div class="card-header"><strong>Aktuelle Temperatur</strong></div>
                 <div class="card-body">
                     <h5 class="card-title">{{ measurementDataNow['Temp'] }} °C</h5>
-                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                    <p class="card-text text-white">{{ measurementDataNow['zeitstempel'].strftime('%d.%m.%Y %H:%M') }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-light mb-3">
+            <div class="card humidity-card custom-card mb-3">
                 <div class="card-header"><strong>Aktuelle Luftfeuchtigkeit</strong></div>
                 <div class="card-body">
                     <h5 class="card-title">{{ measurementDataNow['air'] }} %</h5>
-                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                    <p class="card-text text-white">{{ measurementDataNow['zeitstempel'].strftime('%d.%m.%Y %H:%M') }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-light mb-3">
+            <div class="card moisture-card custom-card mb-3">
                 <div class="card-header"><strong>Aktuelle Bodenfeuchtigkeit</strong></div>
                 <div class="card-body">
                     <h5 class="card-title">{{ measurementDataNow['ground'] }} %</h5>
-                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                    <p class="card-text text-white">{{ measurementDataNow['zeitstempel'].strftime('%d.%m.%Y %H:%M') }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-light mb-3">
+            <div class="card sun-card custom-card mb-3">
                 <div class="card-header"><strong>Aktuelle Sonnenintensität</strong></div>
                 <div class="card-body">
                     <h5 class="card-title">{{ measurementDataNow['sun'] }} lx</h5>
-                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                    <p class="card-text text-white">{{ measurementDataNow['zeitstempel'].strftime('%d.%m.%Y %H:%M') }}</p>
                 </div>
             </div>
         </div>
@@ -96,7 +96,26 @@
 
 <script>
     const measurementDataHist = {{ measurementDataHist | tojson }};
+    const measurementDataNow = {{ measurementDataNow | tojson }};
+    const generalData = {{ generalData | tojson }};
     const labels = measurementDataHist.map(data => data.zeitstempel);
+
+    function setCardColor(value, min, max) {
+        const range = max - min;
+        const tenPercentRange = range * 0.1;
+        if (value < min - tenPercentRange || value > max + tenPercentRange) {
+            return "bg-danger";
+        } else if (value < min || value > max) {
+            return "bg-warning";
+        } else {
+            return "bg-success";
+        }
+    }
+
+    document.querySelector('.temperature-card').classList.add(setCardColor(measurementDataNow['Temp'], generalData['tem_min'], generalData['tem_max']));
+    document.querySelector('.humidity-card').classList.add(setCardColor(measurementDataNow['air'], generalData['air_min'], generalData['air_max']));
+    document.querySelector('.moisture-card').classList.add(setCardColor(measurementDataNow['ground'], generalData['moisture_min'], generalData['moisture_max']));
+    document.querySelector('.sun-card').classList.add(setCardColor(measurementDataNow['sun'], generalData['sunInt_min'], generalData['sunInt_max']));
 
     // Historische Daten für Temperatur, Luft- und Bodenfeuchtigkeit
     const temperatureData = measurementDataHist.map(data => data.Temp);
