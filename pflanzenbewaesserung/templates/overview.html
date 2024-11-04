@@ -1,0 +1,85 @@
+{% extends "default.html" %}
+
+{% block header %}
+    <title>Meine Pflanzen</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/overview.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h1 class="my-4">Pflanzenübersicht</h1>
+
+    <div class="row">
+        {% for i in plants %}
+            <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="card plant h-100" onclick="window.location.href='/details/{{ i.mac }}'">
+                    <div class="card-body">
+                        <!-- Plant image section -->
+                        <div class="product-img text-center">
+                            <!-- <img src="{{ i.img }}" alt="Pflanzenbild" class="img-fluid rounded"> -->
+                        </div>
+                        <!-- Plant details -->
+                        <h5 class="card-title mt-3">{{ i.name }}</h5>
+                        <p class="card-text">Standort: {{ i.place }}</p>
+                        {% if i.currMeasData.Temp < i.tem_min or i.currMeasData.Temp > i.tem_max or 
+                              i.currMeasData.air < i.air_min or i.currMeasData.air > i.air_max or 
+                              i.currMeasData.ground < i.moisture_min or i.currMeasData.ground > i.moisture_max or 
+                              i.currMeasData.sun < i.sunInt_min or i.currMeasData.sun > i.moisture_max %}
+                            <p class="text-danger font-weight-bold">Status: Warnung</p>
+                        {% else %}
+                            <p class="text-success font-weight-bold">Status: in Ordnung</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="my-4">
+        <a href="{{ url_for('pflanze_hinzufuegen') }}" class="btn btn-primary">Neue Pflanze hinzufügen</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>MAC-Adresse</th>
+                    <th>IP-Adresse</th>
+                    <th>Name</th>
+                    <th>Standort</th>
+                    <th>Temperatur (min/max)</th>
+                    <th>Sonnenintensität (min/max)</th>
+                    <th>Sonnendauer (max)</th>
+                    <th>Bodenfeuchtigkeit (min/max)</th>
+                    <th>Luftfeuchtigkeit (min/max)</th>
+                    <th>Gepflanzt am</th>
+                    <th>Zuletzt gegossen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pflanze in plants %}
+                    <tr>
+                        <td>{{ pflanze.mac }}</td>
+                        <td>{{ pflanze.ip }}</td>
+                        <td>{{ pflanze.name }}</td>
+                        <td>{{ pflanze.place }}</td>
+                        <td>{{ pflanze.tem_min }} / {{ pflanze.tem_max }}</td>
+                        <td>{{ pflanze.sunInt_min }} / {{ pflanze.sunInt_max }}</td>
+                        <td>{{ pflanze.sunDur_max }}</td>
+                        <td>{{ pflanze.moisture_min }} / {{ pflanze.moisture_max }}</td>
+                        <td>{{ pflanze.air_min }} / {{ pflanze.air_max }}</td>
+                        <td>{{ pflanze.planted }}</td>
+                        <td>{{ pflanze.pour }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}

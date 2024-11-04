@@ -1,0 +1,71 @@
+{% extends "default.html" %}
+
+{% block title %}Neue Pflanze hinzufügen{% endblock %}
+
+{% block header %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pflanze_hinzufuegen.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Neue Pflanze hinzufügen</h1>
+<form method="post" class="mb-3" enctype="multipart/form-data">
+    <div class="form-group">
+        <label>MAC-Adresse:</label>
+        <input type="text" name="mac_adresse" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>IP-Adresse:</label>
+        <input type="text" name="ip_adresse" class="form-control">
+    </div>
+    <div class="form-group">
+        <label>Name:</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Standort:</label>
+        <input type="text" name="standort" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Temperatur (min):</label>
+        <input type="number" name="temperatur_min" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Temperatur (max):</label>
+        <input type="number" name="temperatur_max" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Sonnenintensität (min):</label>
+        <input type="number" name="sonnenintensität_min" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Sonnenintensität (max):</label>
+        <input type="number" name="sonnenintensität_max" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Sonnendauer (max):</label>
+        <input type="number" name="sonnendauer_max" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Bodenfeuchtigkeit (min):</label>
+        <input type="number" name="bodenfeuchtigkeit_min" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Bodenfeuchtigkeit (max):</label>
+        <input type="number" name="bodenfeuchtigkeit_max" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Luftfeuchtigkeit (min):</label>
+        <input type="number" name="luftfeuchtigkeit_min" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Luftfeuchtigkeit (max):</label>
+        <input type="number" name="luftfeuchtigkeit_max" step="0.1" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Bild hochladen:</label>
+        <input type="file" name="image" accept="image/*" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Pflanze hinzufügen</button>
+</form>
+<a href="{{ url_for('index') }}" class="btn btn-secondary">Zurück zur Übersicht</a>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends "default.html" %}
+
+{% block header %}
+    <title>{{ generalData['name'] }} - Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/details.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Zurück zur Übersicht</a>
+        </div>
+        <div class="col-md-4">
+            <h1 >{{ generalData['name'] }}</h1>
+        </div>
+    </div>
+
+    <div class="row align-items-stretch">  
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img src="{{ url_for('static', filename='images/' + generalData['mac']|replace(':', '')|lower + '.png') }}" class="card-img-top" alt="Bild der Pflanze">
+            </div>
+        </div>
+        <div class="col-md-8">
+            <ul class="list-group h-100">
+                <li class="list-group-item"><strong>MAC-Adresse:</strong> {{ generalData['mac'] }}</li>
+                <li class="list-group-item"><strong>IP-Adresse:</strong> {{ generalData['ip'] }}</li>
+                <li class="list-group-item"><strong>Temperaturbereich:</strong> {{ generalData['tem_min'] }} - {{ generalData['tem_max'] }} °C</li>
+                <li class="list-group-item"><strong>Sonnenintensität:</strong> {{ generalData['sunInt_min'] }} - {{ generalData['sunInt_max'] }} lx</li>
+                <li class="list-group-item"><strong>Maximale Sonnendauer:</strong> {{ generalData['sunDur_max'] }} h</li>
+                <li class="list-group-item"><strong>Bodenfeuchtigkeit:</strong> {{ generalData['moisture_min'] }} - {{ generalData['moisture_max'] }} %</li>
+                <li class="list-group-item"><strong>Luftfeuchtigkeit:</strong> {{ generalData['air_min'] }} - {{ generalData['air_max'] }} %</li>
+                <li class="list-group-item"><strong>Gepflanzt am:</strong> {{ generalData['planted'] }}</li>
+                <li class="list-group-item"><strong>Zuletzt gegossen:</strong> {{ generalData['pour'] }}</li>
+                <li class="list-group-item"><strong>Standort:</strong> {{ generalData['place'] }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row my-4 text-center">
+        <div class="col-md-3">
+            <div class="card bg-light mb-3">
+                <div class="card-header"><strong>Aktuelle Temperatur</strong></div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ measurementDataNow['Temp'] }} °C</h5>
+                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light mb-3">
+                <div class="card-header"><strong>Aktuelle Luftfeuchtigkeit</strong></div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ measurementDataNow['air'] }} %</h5>
+                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light mb-3">
+                <div class="card-header"><strong>Aktuelle Bodenfeuchtigkeit</strong></div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ measurementDataNow['ground'] }} %</h5>
+                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light mb-3">
+                <div class="card-header"><strong>Aktuelle Sonnenintensität</strong></div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ measurementDataNow['sun'] }} lx</h5>
+                    <p class="card-text">{{ measurementDataNow['zeitstempel'] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <canvas id="temperatureChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="humidityChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="moistureChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="sunItensityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const measurementDataHist = {{ measurementDataHist | tojson }};
+    const labels = measurementDataHist.map(data => data.zeitstempel);
+
+    // Historische Daten für Temperatur, Luft- und Bodenfeuchtigkeit
+    const temperatureData = measurementDataHist.map(data => data.Temp);
+    const airHumidityData = measurementDataHist.map(data => data.air);
+    const groundMoistureData = measurementDataHist.map(data => data.ground);
+    const sunData = measurementDataHist.map(data => data.sun);
+
+    //Nur alle 24 Stunden ein Label
+    const filteredLabels = labels.filter((_, index) => index % 60 === 0);
+    for (let i = 0; i < filteredLabels.length; i++) {
+        if (!(i % 24 === 0)){
+            filteredLabels[i] = '';
+        }
+    }
+
+    //Nur stündlich einen Wert
+    const filteredTemperatureData = temperatureData.filter((_, index) => index % 60 === 0);
+    const filteredAirHumidityData = airHumidityData.filter((_, index) => index % 60 === 0);
+    const filteredGroundMoistureData = groundMoistureData.filter((_, index) => index % 60 === 0);
+    const filteredSunData = sunData.filter((_, index) => index % 60 === 0);
+
+    // Temperatur-Chart
+    new Chart(document.getElementById('temperatureChart'), {
+        type: 'line',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
+                    label: 'Umgebungstemperatur (°C)',
+                    data: filteredTemperatureData,
+                    fill: false,
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                }
+            ]
+        }
+    });
+
+    new Chart(document.getElementById('humidityChart'), {
+        type: 'line',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
+                    label: 'Luftfeuchtigkeit (%)',
+                    data: filteredAirHumidityData,
+                    fill: false,
+                    borderColor: 'rgb(54, 162, 235)',
+                    tension: 0.1
+                }
+            ]
+        }
+    });
+
+    new Chart(document.getElementById('moistureChart'), {
+        type: 'line',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
+                    label: 'Bodenfeuchtigkeit (%)',
+                    data: filteredGroundMoistureData,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }
+            ]
+        }
+    });
+
+    new Chart(document.getElementById('sunItensityChart'), {
+        type: 'line',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
+                    label: 'Sonnenintensität (lx)',
+                    data: filteredSunData,
+                    fill: false,
+                    borderColor: 'rgb(255,255,0)',
+                    tension: 0.1
+                }
+            ]
+        }
+    });
+
+</script>
+ 
+<script>
+    // Verbindung zu SocketIO aufbauen
+    const socket = io('http://127.0.0.1:5000');
+      // Überprüfen der SocketIO-Verbindung
+    socket.on('connect', () => {
+        console.log('Verbunden mit dem SocketIO-Server'); // Verbindung bestätigen
+    });
+    
+    socket.on('reload_page', (data) => {
+        console.log('Reload-Seitenereignis empfangen:', data); // Überprüfe, ob die Nachricht empfangen wird
+        location.reload();
+    });
+ 
+</script>
+{% endblock %}

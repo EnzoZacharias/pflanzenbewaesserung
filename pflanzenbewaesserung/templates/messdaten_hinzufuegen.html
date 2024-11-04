@@ -1,0 +1,50 @@
+{% extends "default.html" %}
+
+{% block header %}
+    <title>{{ name }} - Messdaten hinzufügen</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+        <h1 class="text-center mb-4">Neue Messdaten hinzufügen</h1>
+        
+        <form method="post">
+            <div class="mb-3">
+                <label for="pflanzen_id" class="form-label">Pflanze auswählen:</label>
+                <select name="pflanzen_id" class="form-select" required>
+                    {% for pflanze in pflanzen %}
+                    <option value="{{ pflanze.MAC_Adresse }}">{{ pflanze.Name }} (MAC: {{ pflanze.MAC_Adresse }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="umgebungstemperatur" class="form-label">Umgebungstemperatur:</label>
+                <input type="number" name="umgebungstemperatur" class="form-control" step="0.1" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="luftfeuchtigkeit" class="form-label">Luftfeuchtigkeit:</label>
+                <input type="number" name="luftfeuchtigkeit" class="form-control" step="0.1" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="bodenfeuchtigkeit" class="form-label">Bodenfeuchtigkeit:</label>
+                <input type="number" name="bodenfeuchtigkeit" class="form-control" step="0.1" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="lichtintensität" class="form-label">Lichtintensität:</label>
+                <input type="number" name="lichtintensität" class="form-control" step="0.1" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="wasserstand" class="form-label">Wasserstand:</label>
+                <input type="number" name="wasserstand" class="form-control" step="0.1" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Messdaten hinzufügen</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Zurück zur Übersicht</a>
+        </form>
+    </div>
+{% endblock %}

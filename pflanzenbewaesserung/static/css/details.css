@@ -1,0 +1,49 @@
+/* Specific styles for details page */
+h1 {
+    font-size: 2.5em;
+    color: #4CAF50;
+    margin-bottom: 20px;
+}
+
+.card-img-top {
+    border-radius: 15px;
+}
+
+.list-group-item {
+    font-size: 1.1em;
+}
+
+/* Chart Container */
+canvas {
+    margin-top: 20px;
+}
+
+/* Measurements */
+.card-header {
+    font-weight: bold;
+    background-color: #4CAF50;
+    color: white;
+}
+
+.card-body h5 {
+    font-size: 1.8em;
+    color: #555;
+}
+
+/* Make the card and image responsive to the list's height */
+.row.align-items-stretch {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.card.h-100, .list-group.h-100 {
+    height: 100%;
+}
+
+.card-img-top {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    border-radius: 10px;
+}
+
