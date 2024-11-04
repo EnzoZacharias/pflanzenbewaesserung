@@ -22,11 +22,22 @@
                         <!-- Plant details -->
                         <h5 class="card-title mt-3">{{ i.name }}</h5>
                         <p class="card-text">Standort: {{ i.place }}</p>
-                        {% if i.currMeasData.Temp < i.tem_min or i.currMeasData.Temp > i.tem_max or 
-                              i.currMeasData.air < i.air_min or i.currMeasData.air > i.air_max or 
-                              i.currMeasData.ground < i.moisture_min or i.currMeasData.ground > i.moisture_max or 
-                              i.currMeasData.sun < i.sunInt_min or i.currMeasData.sun > i.moisture_max %}
+                        {% set temp_warning = i.currMeasData.Temp < i.tem_min * 0.9 or i.currMeasData.Temp > i.tem_max * 1.1 %}
+                        {% set temp_attention = (i.tem_min * 0.9 <= i.currMeasData.Temp < i.tem_min) or (i.tem_max < i.currMeasData.Temp <= i.tem_max * 1.1) %}
+
+                        {% set air_warning = i.currMeasData.air < i.air_min * 0.9 or i.currMeasData.air > i.air_max * 1.1 %}
+                        {% set air_attention = (i.air_min * 0.9 <= i.currMeasData.air < i.air_min) or (i.air_max < i.currMeasData.air <= i.air_max * 1.1) %}
+
+                        {% set ground_warning = i.currMeasData.ground < i.moisture_min * 0.9 or i.currMeasData.ground > i.moisture_max * 1.1 %}
+                        {% set ground_attention = (i.moisture_min * 0.9 <= i.currMeasData.ground < i.moisture_min) or (i.moisture_max < i.currMeasData.ground <= i.moisture_max * 1.1) %}
+
+                        {% set sun_warning = i.currMeasData.sun < i.sunInt_min * 0.9 or i.currMeasData.sun > i.sunInt_max * 1.1 %}
+                        {% set sun_attention = (i.sunInt_min * 0.9 <= i.currMeasData.sun < i.sunInt_min) or (i.sunInt_max < i.currMeasData.sun <= i.sunInt_max * 1.1) %}
+
+                        {% if temp_warning or air_warning or ground_warning or sun_warning %}
                             <p class="text-danger font-weight-bold">Status: Warnung</p>
+                        {% elif temp_attention or air_attention or ground_attention or sun_attention %}
+                            <p class="text-warning font-weight-bold">Status: Achtung</p>
                         {% else %}
                             <p class="text-success font-weight-bold">Status: in Ordnung</p>
                         {% endif %}
