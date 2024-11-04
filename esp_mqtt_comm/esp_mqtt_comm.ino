@@ -3,8 +3,8 @@
 #include <WiFiClientSecure.h>
 #include <SPI.h>
 
-const char* ssid = "Surface";
-const char* password = "12345678";
+const char* ssid = "FRITZ!Box 7490";
+const char* password = "0151214587014554";
 
 const char* mqtt_server = "abf5695669a8496cbb7cb383b743fdcc.s1.eu.hivemq.cloud";
 const char* mqtt_username = "EnzoZacharias";
@@ -57,11 +57,18 @@ String message;
 
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  String incommingMessage = "";
-  for (int i = 0; i < length; i++) incommingMessage += (char)payload[i];
-  Serial.println("Nachricht angekommen [" + String(topic) + "]" + incommingMessage);
-  messageTemp = topic;
-  Serial.print(messageTemp);
+  String message = "";
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+
+  // Überprüfen, ob die Nachricht die manuelle Bewässerungsaktion enthält
+  if (message == "{\"action\": \"water\"}") {
+    Serial.println("Manuelles Bewässern ausgelöst - Testmodus (kein Relais aktiviert)");
+    // Hier könnte später die Relaissteuerung ergänzt werden
+  } else {
+    Serial.println("Unbekannte Aktion empfangen: " + message);
+  }
 }
 
 void reconnect() {
@@ -90,7 +97,7 @@ void setup() {
   
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print("Hallo");
+    Serial.print(".");
   }
   randomSeed(micros());
   Serial.println("\nWLAN verbunden\nIP-Adresse: ");
@@ -115,13 +122,15 @@ void loop() {
     float Luftfeuchtigkeit = random(30, 60);
     float Bodenfeuchtigkeit = random(20, 80);
     float Lichtintensitaet = random(200, 800);
+    float waterLevelPercent = random(20,70);
 
-    String payload = "{\"Temperatur\":" + String(Temperatur) + 
-                     ",\"Luftfeuchtigkeit\":" + String(Luftfeuchtigkeit) + 
-                     ",\"Bodenfeuchtigkeit\":" + String(Bodenfeuchtigkeit) + 
-                     ",\"Lichtintensitaet\":" + String(Lichtintensitaet) + "}";
+    String payload = "{\"Temperature\":" + String(Temperatur) + 
+                     ",\"Humidity\":" + String(Luftfeuchtigkeit) + 
+                     ",\"SoilMoisture\":" + String(Bodenfeuchtigkeit) + 
+                     ",\"LightIntensity\":" + String(Lichtintensitaet) + 
+                     ",\"WaterLevel\":" + String(waterLevelPercent) + "}";
 
-    publishMessage("pflanzenbewaesserung", payload, false);
+    publishMessage("plant_watering", payload, false);
   }
 }
 

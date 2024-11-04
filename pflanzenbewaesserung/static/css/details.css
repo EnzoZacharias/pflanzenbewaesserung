@@ -96,3 +96,21 @@ canvas {
     font-weight: bold;
     color: #333;
 }
+
+.btn.btn-primary.ms-4 {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn.btn-primary.ms-4 :hover {
+    background-color: #5a6268;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}

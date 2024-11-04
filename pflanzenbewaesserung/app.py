@@ -2,12 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from db_model import db, Pflanze, Messdaten
 from app_plant import plant, getPlants
 from datetime import datetime
-from mqtt_communication import setup_mqtt
+from mqtt_communication import setup_mqtt, mqtt_client, MQTT_TOPIC
 import os
+import json
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
 from sqlalchemy import event
-
 
 app = Flask(__name__)
 app.register_blueprint(plant)
@@ -114,6 +114,14 @@ def messdaten_hinzufuegen():
             flash(f"Fehler beim Hinzufügen der Messdaten: {e}")
 
     return render_template('messdaten_hinzufuegen.html', pflanzen=pflanzen)
+
+@socketio.on('manual_water')
+def handle_manual_water(data):
+    mac_address = data.get('mac')
+    message = json.dumps({"action": "water"})
+    # Hier muss noch die Funktion zum Senden des MQTT-Befehls eingefügt werden
+    # mqtt_client.publish(MQTT_TOPIC, message)
+    print(f"Manuelle Bewässerung gestartet (Geht noch nicht): {mac_address}")
 
 if __name__ == '__main__':
     with app.app_context():

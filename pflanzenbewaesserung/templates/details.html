@@ -45,6 +45,7 @@
                 <div class="water-fill" style="width: {{ measurementDataNow['waterlevel'] }}%;"></div>
             </div>
             <span class="water-percentage ms-3">{{ measurementDataNow['waterlevel'] }}%</span>
+            <button id="manualWaterButton" class="btn btn-primary ms-4">Manuell bewässern</button>
         </div>
     </div>
     <div class="row my-4 text-center">
@@ -124,6 +125,12 @@
     document.querySelector('.humidity-card').classList.add(setCardColor(measurementDataNow['air'], generalData['air_min'], generalData['air_max']));
     document.querySelector('.moisture-card').classList.add(setCardColor(measurementDataNow['ground'], generalData['moisture_min'], generalData['moisture_max']));
     document.querySelector('.sun-card').classList.add(setCardColor(measurementDataNow['sun'], generalData['sunInt_min'], generalData['sunInt_max']));
+
+    document.getElementById('manualWaterButton').addEventListener('click', () => {
+    console.log('Manuelles Bewässern gestartet');
+    socket.emit('manual_water', { mac: generalData['mac'] });
+});
+
 
     // Historische Daten für Temperatur, Luft- und Bodenfeuchtigkeit
     const temperatureData = measurementDataHist.map(data => data.Temp);
