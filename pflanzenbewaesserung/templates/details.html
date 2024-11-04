@@ -38,7 +38,15 @@
             </ul>
         </div>
     </div>
-
+    <div class="row my-5">
+        <div class="col-md-12 d-flex align-items-center">
+            <p class="water-level-text me-3"><strong>Wasserstand:</strong></p>
+            <div class="water-tank-bar">
+                <div class="water-fill" style="width: {{ measurementDataNow['waterlevel'] }}%;"></div>
+            </div>
+            <span class="water-percentage ms-3">{{ measurementDataNow['waterlevel'] }}%</span>
+        </div>
+    </div>
     <div class="row my-4 text-center">
         <div class="col-md-3">
             <div class="card temperature-card custom-card mb-3">

@@ -80,7 +80,8 @@ def getMeasurementDataNow(macAdd):
         'Temp': 0,
         'air': 0,
         'ground': 0,
-        'sun': 0
+        'sun': 0,
+        'waterlevel': 0
     }
     else:
         data = {
@@ -88,6 +89,7 @@ def getMeasurementDataNow(macAdd):
         'Temp': element.Umgebungstemperatur,
         'air': element.Luftfeuchtigkeit,
         'ground': element.Bodenfeuchtigkeit,
-        'sun': element.Lichtintensität
+        'sun': element.Lichtintensität,
+        'waterlevel': element.Wasserstand
     }
     return data
