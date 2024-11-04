@@ -28,3 +28,12 @@ h1 {
 .text-success {
     color: green !important;
 }
+
+.plant-img {
+    width: 100%;
+    max-height: 150px;
+    object-fit: contain; 
+    border-radius: 8px; 
+    display: block;
+    margin: 0 auto;
+}

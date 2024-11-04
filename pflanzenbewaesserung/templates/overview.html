@@ -17,7 +17,7 @@
                     <div class="card-body">
                         <!-- Plant image section -->
                         <div class="product-img text-center">
-                            <!-- <img src="{{ i.img }}" alt="Pflanzenbild" class="img-fluid rounded"> -->
+                            <img src="{{ url_for('static', filename='images/' + i.mac + '.png') }}" alt="Pflanzenbild" class="img-fluid rounded plant-img">
                         </div>
                         <!-- Plant details -->
                         <h5 class="card-title mt-3">{{ i.name }}</h5>
