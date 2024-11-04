@@ -31,8 +31,12 @@ def after_insert(mapper, connection, target):
 @app.route('/')
 def index():
     pflanzen = getPlants()
-    print(pflanzen)
-    return render_template('overview.html', plants=pflanzen)
+    
+    low_water_plants = [pflanze['name'] for pflanze in pflanzen if pflanze['currMeasData']['waterlevel'] < 10]
+    
+    low_water_warning = len(low_water_plants) > 0
+    
+    return render_template('overview.html', plants=pflanzen, low_water_warning=low_water_warning, low_water_plants=low_water_plants)
 
 @app.route('/pflanze/hinzufuegen', methods=['GET', 'POST'])
 def pflanze_hinzufuegen():
