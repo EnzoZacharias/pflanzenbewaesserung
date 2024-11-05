@@ -4,7 +4,7 @@
 #include <SPI.h>
 
 const char* ssid = "FRITZ!Box 7490";
-const char* password = "**********************";
+const char* password = "****************";
 
 const char* mqtt_server = "abf5695669a8496cbb7cb383b743fdcc.s1.eu.hivemq.cloud";
 const char* mqtt_username = "EnzoZacharias";
@@ -61,14 +61,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   for (int i = 0; i < length; i++) {
     message += (char)payload[i];
   }
-
-  // Überprüfen, ob die Nachricht die manuelle Bewässerungsaktion enthält
-  if (message == "{\"action\": \"water\"}") {
-    Serial.println("Manuelles Bewässern ausgelöst - Testmodus (kein Relais aktiviert)");
-    // Hier könnte später die Relaissteuerung ergänzt werden
-  } else {
-    Serial.println("Unbekannte Aktion empfangen: " + message);
-  }
+  Serial.println("Aktion empfangen: " + message);
+  /*An dieser Stelle Funktion aufrufen, welche die manuelle Bewässerung ausführt*/
 }
 
 void reconnect() {
@@ -78,6 +72,7 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("verbunden");
+      client.subscribe("manuel_watering");
     } else {
       Serial.print("fehlgeschlagen, rc=");
       Serial.print(client.state());
