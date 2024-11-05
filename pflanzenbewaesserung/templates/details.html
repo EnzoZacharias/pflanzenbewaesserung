@@ -3,6 +3,7 @@
 {% block header %}
     <title>{{ generalData['name'] }} - Details</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/qrcodeGenerator.min.js"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/details.css') }}">
 {% endblock %}
 
@@ -46,6 +47,7 @@
             </div>
             <span class="water-percentage ms-3">{{ measurementDataNow['waterlevel'] }}%</span>
             <button id="manualWaterButton" class="btn btn-primary ms-4">Manuell bewässern</button>
+            <div class="ms-5" id="qrCodeContainer">QR-Code zur aktuellen Seite:</div>
         </div>
     </div>
     <div class="row my-4 text-center">
@@ -232,5 +234,30 @@
         location.reload();
     });
  
+</script>
+<script>
+    
+    function generator () {
+        var url = "{{ url | safe }}"; //Übergebene Url-Parameter unverändert laden
+        const qrCodeOutput = document.getElementById('qrCodeContainer');
+        var outputElementWidth = qrCodeOutput.offsetWidth;
+        outputElementWidth = outputElementWidth + 40; 
+        qrCodeOutput.innerHTML = " ";  // letzten QR-Code resetten
+         
+        //neuen QR-Code erstellen
+        new QRCode(qrCodeOutput, {
+            text: url,
+            width: outputElementWidth,
+            height: outputElementWidth,
+            colorDark: '#000',
+            colorLight: '#fff'
+        });
+    }
+
+    //QR-Code mit Link zur Detail-Webseite erstellen, sobald die Seite geladen ist
+    document.addEventListener("DOMContentLoaded", function() {
+        generator();
+    });
+
 </script>
 {% endblock %}

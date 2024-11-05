@@ -19,7 +19,8 @@ def detailPage(macAdd):
     generalData = getGeneralData(macAdd)
     measurementDataHist = getMeasurementDataHist(macAdd)
     measurementDataNow = getMeasurementDataNow(macAdd)
-    return render_template('details.html', generalData=generalData, measurementDataHist=measurementDataHist, measurementDataNow=measurementDataNow)
+    url = "http://127.0.0.1:5000/details/" + macAdd
+    return render_template('details.html', generalData=generalData, measurementDataHist=measurementDataHist, measurementDataNow=measurementDataNow, url=url)
 
 @plant.route("/overview")
 def overview():
@@ -76,7 +77,7 @@ def getMeasurementDataNow(macAdd):
 
     if element is None:
         data = {
-        'zeitstempel': "N/A",
+        'zeitstempel': now,
         'Temp': 0,
         'air': 0,
         'ground': 0,
