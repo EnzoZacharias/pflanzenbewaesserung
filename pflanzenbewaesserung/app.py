@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from db_model import db, Pflanze, Messdaten
+from flask_mail import Mail, Message
+from db_model import db, Pflanze, Messdaten, get_name_by_plant_id
 from app_plant import plant, getPlants
 from datetime import datetime
 from mqtt_communication import setup_mqtt, mqtt_client, MQTT_TOPIC
@@ -16,16 +17,54 @@ app.config['SECRET_KEY'] = 'mysecretkey'
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///pflanzenbewaesserung.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-socketio = SocketIO(app)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'enzozachariasllm@gmail.com'
+app.config['MAIL_PASSWORD'] = 'arux dbfd iqec mpbd'
+app.config['MAIL_DEFAULT_SENDER'] = ('Bewässerungssystem für Pflanzen', 'enzozachariasllm@gmail.com')
 
+mail = Mail(app)
+socketio = SocketIO(app)
 db.init_app(app)
+
+email_sent_status = {}
+
+def send_email(water_level, plant_name="Unbekannt"):
+    msg = Message(
+        subject="🚨 Warnung: Niedriger Wasserstand im Tank! 🚨",
+        recipients=["E.Zacharias@beckhoff.com"], # Anpassen, falls man die E-Mail an eine andere Adresse senden möchte
+        html=(
+            f"<html><body>"
+            f"<h2 style='color: red;'>🚨 Warnung: Niedriger Wasserstand im Tank! 🚨</h2>"
+            f"<p>🌱 <strong>Achtung!</strong> Der Wasserstand im Tank der Pflanze <strong>'{plant_name}'</strong> "
+            f"ist auf <strong>{water_level}%</strong> gesunken.</p>"
+            f"<p>Bitte füllen Sie den Tank so schnell wie möglich auf, um sicherzustellen, "
+            f"dass Ihre Pflanze weiterhin optimal versorgt wird.</p>"
+            f"<p>Vielen Dank für Ihre Aufmerksamkeit!</p>"
+            f"<p><em>Ihr Bewässerungssystem für Pflanzen 🌿</em></p>"
+            f"</body></html>"
+        )
+    )
+    try:
+        mail.send(msg)
+        print("E-Mail erfolgreich gesendet.")
+    except Exception as e:
+        print(f"Fehler beim Senden der E-Mail: {e}")
 
 setup_mqtt(app)
 
 # Event-Listener für die Überwachung der Datenbank
 @event.listens_for(Messdaten, 'after_insert')
 def after_insert(mapper, connection, target):
-    #print(f"Nach dem Einfügen: {target.Pflanzen_ID}")  
+    plant_id = target.Pflanzen_ID
+    name = get_name_by_plant_id(target.Pflanzen_ID)
+    if target.Wasserstand is not None and target.Wasserstand < 10:
+        if plant_id not in email_sent_status or not email_sent_status[plant_id]:
+            send_email(target.Wasserstand, name)
+            email_sent_status[plant_id] = True
+    else:
+        email_sent_status[plant_id] = False
     socketio.emit('reload_page')
 
 @app.route('/')
@@ -118,9 +157,8 @@ def messdaten_hinzufuegen():
 @socketio.on('manual_water')
 def handle_manual_water(data):
     mac_address = data.get('mac')
-    message = json.dumps({"action": "water"})
-    # Hier muss noch die Funktion zum Senden des MQTT-Befehls eingefügt werden
-    # mqtt_client.publish(MQTT_TOPIC, message)
+    message_with_mac = json.dumps({"action": "water", "mac": mac_address})
+    mqtt_client.publish("manuel_watering", message_with_mac)
     print(f"Manuelle Bewässerung gestartet (Geht noch nicht): {mac_address}")
 
 if __name__ == '__main__':
