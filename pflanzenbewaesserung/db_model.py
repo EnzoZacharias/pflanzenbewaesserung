@@ -86,3 +86,7 @@ class Messdaten(db.Model):
         db.session.add(new_messdaten)
         db.session.commit()
         return new_messdaten
+    
+def get_name_by_plant_id(plant_id):
+    plant = Pflanze.query.filter_by(MAC_Adresse=plant_id).first()
+    return plant.Name
