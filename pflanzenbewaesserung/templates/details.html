@@ -47,7 +47,7 @@
             </div>
             <span class="water-percentage ms-3">{{ measurementDataNow['waterlevel'] }}%</span>
             <button id="manualWaterButton" class="btn btn-primary ms-4">Manuell bewässern</button>
-            <div class="ms-5" id="qrCodeContainer">QR-Code zur aktuellen Seite:</div>
+          
         </div>
     </div>
     <div class="row my-4 text-center">
@@ -101,6 +101,11 @@
         </div>
         <div class="col-md-6">
             <canvas id="sunItensityChart"></canvas>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-md-12 d-flex align-items-center">
+            <div class="ms-5" id="qrCodeContainer"></div>
         </div>
     </div>
 </div>
@@ -241,8 +246,8 @@
         var url = "{{ url | safe }}"; //Übergebene Url-Parameter unverändert laden
         const qrCodeOutput = document.getElementById('qrCodeContainer');
         var outputElementWidth = qrCodeOutput.offsetWidth;
-        outputElementWidth = outputElementWidth + 40; 
-        qrCodeOutput.innerHTML = " ";  // letzten QR-Code resetten
+        outputElementWidth = outputElementWidth +100 ; 
+        //qrCodeOutput.innerHTML = " ";  // letzten QR-Code resetten
          
         //neuen QR-Code erstellen
         new QRCode(qrCodeOutput, {
