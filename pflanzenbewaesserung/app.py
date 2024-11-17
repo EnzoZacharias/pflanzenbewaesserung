@@ -156,10 +156,9 @@ def messdaten_hinzufuegen():
 
 @socketio.on('manual_water')
 def handle_manual_water(data):
-    mac_address = data.get('mac')
-    message_with_mac = json.dumps({"action": "water", "mac": mac_address})
-    mqtt_client.publish("manuel_watering", message_with_mac)
-    print(f"Manuelle Bewässerung gestartet (Geht noch nicht): {mac_address}")
+    message = json.dumps({"action": "water"})
+    mqtt_client.publish("manuel_watering", message)
+    print(f"Manuelle Bewässerung gestartet")
 
 if __name__ == '__main__':
     with app.app_context():
