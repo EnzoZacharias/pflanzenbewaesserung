@@ -29,7 +29,7 @@
                 <li class="list-group-item"><strong>MAC-Adresse:</strong> {{ generalData['mac'] }}</li>
                 <li class="list-group-item"><strong>IP-Adresse:</strong> {{ generalData['ip'] }}</li>
                 <li class="list-group-item"><strong>Temperaturbereich:</strong> {{ generalData['tem_min'] }} - {{ generalData['tem_max'] }} °C</li>
-                <li class="list-group-item"><strong>Sonnenintensität:</strong> {{ generalData['sunInt_min'] }} - {{ generalData['sunInt_max'] }} lx</li>
+                <li class="list-group-item"><strong>Sonnenintensität:</strong> {{ generalData['sunInt_min'] }} - {{ generalData['sunInt_max'] }} %</li>
                 <li class="list-group-item"><strong>Maximale Sonnendauer:</strong> {{ generalData['sunDur_max'] }} h</li>
                 <li class="list-group-item"><strong>Bodenfeuchtigkeit:</strong> {{ generalData['moisture_min'] }} - {{ generalData['moisture_max'] }} %</li>
                 <li class="list-group-item"><strong>Luftfeuchtigkeit:</strong> {{ generalData['air_min'] }} - {{ generalData['air_max'] }} %</li>
@@ -82,7 +82,7 @@
             <div class="card sun-card custom-card mb-3">
                 <div class="card-header"><strong>Aktuelle Sonnenintensität</strong></div>
                 <div class="card-body">
-                    <h5 class="card-title">{{ measurementDataNow['sun'] }} lx</h5>
+                    <h5 class="card-title">{{ measurementDataNow['sun'] }} %</h5>
                     <p class="card-text text-white">{{ measurementDataNow['zeitstempel'].strftime('%d.%m.%Y %H:%M') }}</p>
                 </div>
             </div>
