@@ -113,7 +113,11 @@
     const measurementDataHist = {{ measurementDataHist | tojson }};
     const measurementDataNow = {{ measurementDataNow | tojson }};
     const generalData = {{ generalData | tojson }};
-    const labels = measurementDataHist.map(data => data.zeitstempel);
+
+    // Hilfsfunktionen
+    function average(values) {
+        return values.reduce((sum, val) => sum + val, 0) / values.length;
+    }
 
     function setCardColor(value, min, max) {
         const range = max - min;
@@ -127,127 +131,118 @@
         }
     }
 
-    document.querySelector('.temperature-card').classList.add(setCardColor(measurementDataNow['Temp'], generalData['tem_min'], generalData['tem_max']));
-    document.querySelector('.humidity-card').classList.add(setCardColor(measurementDataNow['air'], generalData['air_min'], generalData['air_max']));
-    document.querySelector('.moisture-card').classList.add(setCardColor(measurementDataNow['ground'], generalData['moisture_min'], generalData['moisture_max']));
-    document.querySelector('.sun-card').classList.add(setCardColor(measurementDataNow['sun'], generalData['sunInt_min'], generalData['sunInt_max']));
+    // Funktion zum Aggregieren von Daten pro Stunde
+    function filterDataForDayAndNight(data) {
+        const aggregatedData = [];
+        const aggregatedLabels = [];
+        const hourlyGroups = {};
 
+        // Daten nach Stunde gruppieren
+        data.forEach(entry => {
+            const timestamp = new Date(entry.zeitstempel);
+            const hourKey = `${timestamp.getUTCFullYear()}-${timestamp.getUTCMonth() + 1}-${timestamp.getUTCDate()} ${timestamp.getUTCHours()}`;
+
+            if (!hourlyGroups[hourKey]) {
+                hourlyGroups[hourKey] = {
+                    Temp: [],
+                    air: [],
+                    ground: [],
+                    sun: [],
+                };
+            }
+
+            hourlyGroups[hourKey].Temp.push(entry.Temp);
+            hourlyGroups[hourKey].air.push(entry.air);
+            hourlyGroups[hourKey].ground.push(entry.ground);
+            hourlyGroups[hourKey].sun.push(entry.sun);
+        });
+
+        // Fehlende Stunden füllen
+        const startTimestamp = new Date(data[0].zeitstempel);
+        const endTimestamp = new Date(data[data.length - 1].zeitstempel);
+
+        for (let d = new Date(startTimestamp); d <= endTimestamp; d.setHours(d.getHours() + 1)) {
+            const hourKey = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()} ${d.getUTCHours()}`;
+            aggregatedLabels.push(hourKey);
+
+            if (hourlyGroups[hourKey]) {
+                aggregatedData.push({
+                    Temp: average(hourlyGroups[hourKey].Temp),
+                    air: average(hourlyGroups[hourKey].air),
+                    ground: average(hourlyGroups[hourKey].ground),
+                    sun: average(hourlyGroups[hourKey].sun),
+                });
+            } else {
+                console.log(`Keine Daten für Stunde: ${hourKey}`);
+                aggregatedData.push({
+                    Temp: null,
+                    air: null,
+                    ground: null,
+                    sun: null,
+                });
+            }
+        }
+
+        return { labels: aggregatedLabels, data: aggregatedData };
+    }
+
+    // Daten filtern und aggregieren
+    const filteredData = filterDataForDayAndNight(measurementDataHist);
+
+    // Kartenfarben aktualisieren
+    document.querySelector('.temperature-card').classList.add(
+        setCardColor(measurementDataNow['Temp'], generalData['tem_min'], generalData['tem_max'])
+    );
+    document.querySelector('.humidity-card').classList.add(
+        setCardColor(measurementDataNow['air'], generalData['air_min'], generalData['air_max'])
+    );
+    document.querySelector('.moisture-card').classList.add(
+        setCardColor(measurementDataNow['ground'], generalData['moisture_min'], generalData['moisture_max'])
+    );
+    document.querySelector('.sun-card').classList.add(
+        setCardColor(measurementDataNow['sun'], generalData['sunInt_min'], generalData['sunInt_max'])
+    );
+
+    // Event-Listener für manuellen Button
     document.getElementById('manualWaterButton').addEventListener('click', () => {
         console.log('Manuelles Bewässern gestartet');
         socket.emit('manual_water', { mac: generalData['mac'] });
     });
 
-    const temperatureData = measurementDataHist.map(data => data.Temp);
-    const airHumidityData = measurementDataHist.map(data => data.air);
-    const groundMoistureData = measurementDataHist.map(data => data.ground);
-    const sunData = measurementDataHist.map(data => data.sun);
-
-
-    // Funktion zum Filtern von Labels und Daten basierend auf der Tageszeit
-    function filterDataForDayAndNight(data, labels) {
-        const aggregatedData = [];
-        const aggregatedLabels = [];
-        let lastHour = null;
-
-        for (let i = 0; i < data.length; i++) {
-            const timestamp = new Date(labels[i]);
-            const currentHour = timestamp.getHours();
-
-            if (currentHour !== lastHour) {
-                // Neuen Wert für die aktuelle Stunde speichern
-                aggregatedData.push(data[i]);
-                aggregatedLabels.push(labels[i]);
-                lastHour = currentHour;
-            } else {
-                // Überschreibt den vorherigen Wert, um den letzten innerhalb der Stunde zu nehmen
-                aggregatedData[aggregatedData.length - 1] = data[i];
-                aggregatedLabels[aggregatedLabels.length - 1] = labels[i];
+    // Generische Funktion für die Erstellung von Charts
+    function createChart(chartId, label, labels, data, borderColor) {
+        new Chart(document.getElementById(chartId), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: label,
+                        data: data,
+                        fill: false,
+                        borderColor: borderColor,
+                        tension: 0.1
+                    }
+                ]
             }
-        }
-        return { data: aggregatedData, labels: aggregatedLabels };
+        });
     }
 
-    // Daten und Labels filtern
-    const temperatureFiltered = filterDataForDayAndNight(temperatureData, labels);
-    const airHumidityFiltered = filterDataForDayAndNight(airHumidityData, labels);
-    const groundMoistureFiltered = filterDataForDayAndNight(groundMoistureData, labels);
-    const sunFiltered = filterDataForDayAndNight(sunData, labels);
+    // Daten für Charts extrahieren
+    const temperatureChartData = filteredData.data.map(item => item.Temp);
+    const airHumidityChartData = filteredData.data.map(item => item.air);
+    const groundMoistureChartData = filteredData.data.map(item => item.ground);
+    const sunChartData = filteredData.data.map(item => item.sun);
 
+    // Charts erstellen
+    createChart('temperatureChart', 'Umgebungstemperatur (°C)', filteredData.labels, temperatureChartData, 'rgb(255, 99, 132)');
+    createChart('humidityChart', 'Luftfeuchtigkeit (%)', filteredData.labels, airHumidityChartData, 'rgb(54, 162, 235)');
+    createChart('moistureChart', 'Bodenfeuchtigkeit (%)', filteredData.labels, groundMoistureChartData, 'rgb(75, 192, 192)');
+    createChart('sunItensityChart', 'Sonnenintensität (%)', filteredData.labels, sunChartData, 'rgb(255, 255, 0)');
+
+    // Debugging-Logs
     console.log("MeasurementDataHist:", measurementDataHist);
-    console.log("Labels:", labels);
-    console.log("Temperature Data:", temperatureData);
-    console.log("Filtered Temperature Data:", temperatureFiltered);
-    console.log("Filtered Temperature Labels:", temperatureFiltered.labels);
-
-
-    // Temperatur-Chart
-    new Chart(document.getElementById('temperatureChart'), {
-        type: 'line',
-        data: {
-            labels: temperatureFiltered.labels,
-            datasets: [
-                {
-                    label: 'Umgebungstemperatur (°C)',
-                    data: temperatureFiltered.data,
-                    fill: false,
-                    borderColor: 'rgb(255, 99, 132)',
-                    tension: 0.1
-                }
-            ]
-        }
-    });
-
-    // Luftfeuchtigkeit-Chart
-    new Chart(document.getElementById('humidityChart'), {
-        type: 'line',
-        data: {
-            labels: airHumidityFiltered.labels,
-            datasets: [
-                {
-                    label: 'Luftfeuchtigkeit (%)',
-                    data: airHumidityFiltered.data,
-                    fill: false,
-                    borderColor: 'rgb(54, 162, 235)',
-                    tension: 0.1
-                }
-            ]
-        }
-    });
-
-    // Bodenfeuchtigkeit-Chart
-    new Chart(document.getElementById('moistureChart'), {
-        type: 'line',
-        data: {
-            labels: groundMoistureFiltered.labels,
-            datasets: [
-                {
-                    label: 'Bodenfeuchtigkeit (%)',
-                    data: groundMoistureFiltered.data,
-                    fill: false,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }
-            ]
-        }
-    });
-
-    // Sonnenintensität-Chart
-    new Chart(document.getElementById('sunItensityChart'), {
-        type: 'line',
-        data: {
-            labels: sunFiltered.labels,
-            datasets: [
-                {
-                    label: 'Sonnenintensität (%)',
-                    data: sunFiltered.data,
-                    fill: false,
-                    borderColor: 'rgb(255, 255, 0)',
-                    tension: 0.1
-                }
-            ]
-        }
-    });
-
+    console.log("Filtered Data:", filteredData);
 </script>
  
 <script>

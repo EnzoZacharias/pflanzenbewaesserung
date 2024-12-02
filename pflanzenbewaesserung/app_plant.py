@@ -56,12 +56,12 @@ def getGeneralData(macAdd):
 # Funktion, um historische Messdaten der letzten 72 Stunden für eine Pflanze abzurufen
 def getMeasurementDataHist(macAdd):
     now = datetime.now()
-    two_weeks_ago = now - timedelta(hours=72)  # Zeitfenster der letzten 72 Stunden berechnen
+    timewindow = now - timedelta(hours=72)  # Zeitfenster der letzten 72 Stunden berechnen
     data = []
     measurementData = db.session.query(Messdaten).join(Pflanze).filter(
         Messdaten.Pflanzen_ID == macAdd,
         Messdaten.Zeitstempel <= now,
-        Messdaten.Zeitstempel >= two_weeks_ago
+        Messdaten.Zeitstempel >= timewindow
     ).all()
     for element in measurementData:
         newData = {
