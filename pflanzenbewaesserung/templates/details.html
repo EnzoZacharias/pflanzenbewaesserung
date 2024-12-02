@@ -20,17 +20,16 @@
 
     <div class="row align-items-stretch">  
         <div class="col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 d-flex">
                 <img src="{{ url_for('static', filename='images/' + generalData['mac']|replace(':', '')|lower + '.png') }}" class="card-img-top" alt="Bild der Pflanze">
             </div>
         </div>
         <div class="col-md-8">
-            <ul class="list-group h-100">
+            <ul class="list-group h-100 d-flex">
                 <li class="list-group-item"><strong>MAC-Adresse:</strong> {{ generalData['mac'] }}</li>
                 <li class="list-group-item"><strong>IP-Adresse:</strong> {{ generalData['ip'] }}</li>
                 <li class="list-group-item"><strong>Temperaturbereich:</strong> {{ generalData['tem_min'] }} - {{ generalData['tem_max'] }} °C</li>
                 <li class="list-group-item"><strong>Sonnenintensität:</strong> {{ generalData['sunInt_min'] }} - {{ generalData['sunInt_max'] }} %</li>
-                <li class="list-group-item"><strong>Maximale Sonnendauer:</strong> {{ generalData['sunDur_max'] }} h</li>
                 <li class="list-group-item"><strong>Bodenfeuchtigkeit:</strong> {{ generalData['moisture_min'] }} - {{ generalData['moisture_max'] }} %</li>
                 <li class="list-group-item"><strong>Luftfeuchtigkeit:</strong> {{ generalData['air_min'] }} - {{ generalData['air_max'] }} %</li>
                 <li class="list-group-item"><strong>Gepflanzt am:</strong> {{ generalData['planted'] }}</li>
