@@ -29,6 +29,7 @@ socketio = SocketIO(app)
 db.init_app(app)
 
 email_sent_status = {}
+watering_triggered_status = {}
 
 def send_email(water_level, plant_name="Unbekannt"):
     msg = Message(
@@ -65,6 +66,17 @@ def after_insert(mapper, connection, target):
             email_sent_status[plant_id] = True
     else:
         email_sent_status[plant_id] = False
+    # Check soil moisture and trigger watering if low
+    if target.Bodenfeuchtigkeit is not None and target.Bodenfeuchtigkeit < 10:
+        if plant_id not in watering_triggered_status or not watering_triggered_status[plant_id]:
+            # Trigger watering
+            message = json.dumps({"action": "water"})
+            mqtt_client.publish("manuel_watering", message)
+            Pflanze.update_zuletztGegossen(plant_id)
+            watering_triggered_status[plant_id] = True
+            print(f"Automatic watering started for plant {name} ({plant_id}) due to low soil moisture.")
+    else:
+        watering_triggered_status[plant_id] = False
     socketio.emit('reload_page')
 
 @app.route('/')
