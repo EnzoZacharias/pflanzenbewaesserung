@@ -90,7 +90,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       String action = doc["action"]; // "water"
 
       if (action == "water") {
-        setRelayFlag();
+        setReDlayFlag();
         Serial.println("Manual watering triggered.");
       } else {
         Serial.println("Manual watering can't be triggered.");

@@ -158,6 +158,7 @@ def messdaten_hinzufuegen():
 def handle_manual_water(data):
     message = json.dumps({"action": "water"})
     mqtt_client.publish("manuel_watering", message)
+    Pflanze.update_zuletztGegossen(data['mac'])
     print(f"Manuelle Bewässerung gestartet")
 
 if __name__ == '__main__':

@@ -55,6 +55,13 @@ class Pflanze(db.Model):
             return new_pflanze
         except Exception as e:
             raise e
+        
+    @classmethod
+    def update_zuletztGegossen(cls, mac_adresse):
+        pflanze = cls.query.filter_by(MAC_Adresse=mac_adresse).first()
+        pflanze.zuletztGegossen = datetime.now().replace(microsecond=0)
+        db.session.commit()
+        return pflanze
 
 
 class Messdaten(db.Model):
