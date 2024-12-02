@@ -172,15 +172,7 @@
                     ground: average(hourlyGroups[hourKey].ground),
                     sun: average(hourlyGroups[hourKey].sun),
                 });
-            } else {
-                console.log(`Keine Daten für Stunde: ${hourKey}`);
-                aggregatedData.push({
-                    Temp: null,
-                    air: null,
-                    ground: null,
-                    sun: null,
-                });
-            }
+            } 
         }
 
         return { labels: aggregatedLabels, data: aggregatedData };
