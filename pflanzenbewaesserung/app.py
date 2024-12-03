@@ -69,7 +69,7 @@ def after_insert(mapper, connection, target):
     # Überprüfung des Wasserstands
     if target.Wasserstand is not None and target.Wasserstand < 10:
         if plant_id not in email_sent_status or not email_sent_status[plant_id]:
-            send_email(target.Wasserstand, name)
+            # send_email(target.Wasserstand, name)
             email_sent_status[plant_id] = True
     else:
         email_sent_status[plant_id] = False

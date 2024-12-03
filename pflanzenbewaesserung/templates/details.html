@@ -114,72 +114,102 @@
     const measurementDataNow = {{ measurementDataNow | tojson }};
     const generalData = {{ generalData | tojson }};
 
-    // Hilfsfunktionen
-    function average(values) {
-        return values.reduce((sum, val) => sum + val, 0) / values.length;
-    }
-
-    function setCardColor(value, min, max) {
-        const range = max - min;
-        const tenPercentRange = range * 0.1;
-        if (value < min - tenPercentRange || value > max + tenPercentRange) {
-            return "bg-danger";
-        } else if (value < min || value > max) {
-            return "bg-warning";
-        } else {
-            return "bg-success";
-        }
-    }
-
-    // Funktion zum Aggregieren von Daten pro Stunde
     function filterDataForDayAndNight(data) {
-        const aggregatedData = [];
-        const aggregatedLabels = [];
-        const hourlyGroups = {};
+    const aggregatedData = [];
+    const aggregatedLabels = [];
+    const hourlyGroups = {};
 
-        // Daten nach Stunde gruppieren
-        data.forEach(entry => {
-            const timestamp = new Date(entry.zeitstempel);
-            const hourKey = `${timestamp.getUTCFullYear()}-${timestamp.getUTCMonth() + 1}-${timestamp.getUTCDate()} ${timestamp.getUTCHours()}`;
+    // Daten nach Stunde gruppieren
+    data.forEach(entry => {
+        const timestamp = new Date(entry.zeitstempel);
+        const hourKey = `${timestamp.getUTCFullYear()}-${timestamp.getUTCMonth() + 1}-${timestamp.getUTCDate()} ${timestamp.getUTCHours()}`;
 
-            if (!hourlyGroups[hourKey]) {
-                hourlyGroups[hourKey] = {
-                    Temp: [],
-                    air: [],
-                    ground: [],
-                    sun: [],
-                };
-            }
-
-            hourlyGroups[hourKey].Temp.push(entry.Temp);
-            hourlyGroups[hourKey].air.push(entry.air);
-            hourlyGroups[hourKey].ground.push(entry.ground);
-            hourlyGroups[hourKey].sun.push(entry.sun);
-        });
-
-        // Fehlende Stunden füllen
-        const startTimestamp = new Date(data[0].zeitstempel);
-        const endTimestamp = new Date(data[data.length - 1].zeitstempel);
-
-        for (let d = new Date(startTimestamp); d <= endTimestamp; d.setHours(d.getHours() + 1)) {
-            const hourKey = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()} ${d.getUTCHours()}`;
-            aggregatedLabels.push(hourKey);
-
-            if (hourlyGroups[hourKey]) {
-                aggregatedData.push({
-                    Temp: average(hourlyGroups[hourKey].Temp),
-                    air: average(hourlyGroups[hourKey].air),
-                    ground: average(hourlyGroups[hourKey].ground),
-                    sun: average(hourlyGroups[hourKey].sun),
-                });
-            } 
+        if (!hourlyGroups[hourKey]) {
+            hourlyGroups[hourKey] = { Temp: [], air: [], ground: [], sun: [] };
         }
 
-        return { labels: aggregatedLabels, data: aggregatedData };
+        // Werte zur Stunde hinzufügen
+        hourlyGroups[hourKey].Temp.push(entry.Temp);
+        hourlyGroups[hourKey].air.push(entry.air);
+        hourlyGroups[hourKey].ground.push(entry.ground);
+        hourlyGroups[hourKey].sun.push(entry.sun);
+    });
+
+
+    // Fehlende Stunden füllen
+    const startTimestamp = new Date(data[0].zeitstempel);
+    const endTimestamp = new Date(data[data.length - 1].zeitstempel);
+
+    for (let d = new Date(startTimestamp); d <= endTimestamp; d.setHours(d.getHours() + 1)) {
+        const hourKey = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()} ${d.getUTCHours()}`;
+        aggregatedLabels.push(hourKey);
+
+        if (hourlyGroups[hourKey]) {
+            aggregatedData.push({
+                Temp: average(hourlyGroups[hourKey].Temp),
+                air: average(hourlyGroups[hourKey].air),
+                ground: average(hourlyGroups[hourKey].ground),
+                sun: average(hourlyGroups[hourKey].sun),
+            });
+        } else {
+            aggregatedData.push({ Temp: null, air: null, ground: null, sun: null });
+        }
     }
 
-    // Daten filtern und aggregieren
+    console.log("Aggregated Labels:", aggregatedLabels);
+    console.log("Aggregated Data:", aggregatedData);
+    return { labels: aggregatedLabels, data: aggregatedData };
+}
+
+function average(values) {
+    return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : null;
+}
+
+function setCardColor(value, min, max) {
+    const range = max - min;
+    const tenPercentRange = range * 0.1;
+    if (value < min - tenPercentRange || value > max + tenPercentRange) {
+        return "bg-danger";
+    } else if (value < min || value > max) {
+        return "bg-warning";
+    } else {
+        return "bg-success";
+    }
+}
+
+function createChart(chartId, label, labels, data, borderColor) {
+    new Chart(document.getElementById(chartId), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: label,
+                    data: data,
+                    fill: false,
+                    borderColor: borderColor,
+                    tension: 0.1,
+                    // spanGaps: true, // Interpolation von Lücken
+                }
+            ]
+        }
+    });
+}
+
+// Verarbeitung der Daten und Erstellung der Diagramme
+document.addEventListener("DOMContentLoaded", function () {
     const filteredData = filterDataForDayAndNight(measurementDataHist);
+
+    const temperatureChartData = filteredData.data.map(item => item.Temp);
+    const airHumidityChartData = filteredData.data.map(item => item.air);
+    const groundMoistureChartData = filteredData.data.map(item => item.ground);
+    const sunChartData = filteredData.data.map(item => item.sun);
+
+    // Charts erstellen
+    createChart('temperatureChart', 'Umgebungstemperatur (°C)', filteredData.labels, temperatureChartData, 'rgb(255, 99, 132)');
+    createChart('humidityChart', 'Luftfeuchtigkeit (%)', filteredData.labels, airHumidityChartData, 'rgb(54, 162, 235)');
+    createChart('moistureChart', 'Bodenfeuchtigkeit (%)', filteredData.labels, groundMoistureChartData, 'rgb(75, 192, 192)');
+    createChart('sunItensityChart', 'Sonnenintensität (%)', filteredData.labels, sunChartData, 'rgb(255, 255, 0)');
 
     // Kartenfarben aktualisieren
     document.querySelector('.temperature-card').classList.add(
@@ -195,46 +225,8 @@
         setCardColor(measurementDataNow['sun'], generalData['sunInt_min'], generalData['sunInt_max'])
     );
 
-    // Event-Listener für manuellen Button
-    document.getElementById('manualWaterButton').addEventListener('click', () => {
-        console.log('Manuelles Bewässern gestartet');
-        socket.emit('manual_water', { mac: generalData['mac'] });
-    });
-
-    // Generische Funktion für die Erstellung von Charts
-    function createChart(chartId, label, labels, data, borderColor) {
-        new Chart(document.getElementById(chartId), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: label,
-                        data: data,
-                        fill: false,
-                        borderColor: borderColor,
-                        tension: 0.1
-                    }
-                ]
-            }
-        });
-    }
-
-    // Daten für Charts extrahieren
-    const temperatureChartData = filteredData.data.map(item => item.Temp);
-    const airHumidityChartData = filteredData.data.map(item => item.air);
-    const groundMoistureChartData = filteredData.data.map(item => item.ground);
-    const sunChartData = filteredData.data.map(item => item.sun);
-
-    // Charts erstellen
-    createChart('temperatureChart', 'Umgebungstemperatur (°C)', filteredData.labels, temperatureChartData, 'rgb(255, 99, 132)');
-    createChart('humidityChart', 'Luftfeuchtigkeit (%)', filteredData.labels, airHumidityChartData, 'rgb(54, 162, 235)');
-    createChart('moistureChart', 'Bodenfeuchtigkeit (%)', filteredData.labels, groundMoistureChartData, 'rgb(75, 192, 192)');
-    createChart('sunItensityChart', 'Sonnenintensität (%)', filteredData.labels, sunChartData, 'rgb(255, 255, 0)');
-
-    // Debugging-Logs
-    console.log("MeasurementDataHist:", measurementDataHist);
     console.log("Filtered Data:", filteredData);
+});
 </script>
  
 <script>
