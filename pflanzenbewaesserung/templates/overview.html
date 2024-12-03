@@ -1,6 +1,7 @@
-{% extends "default.html" %}
+{% extends "default.html" %} <!--Erweitert das Defaullayout-->
 
 {% block header %}
+    <!--CSS-Referenz und Tap-Title anlegen-->
     <title>Meine Pflanzen</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/overview.css') }}">
 {% endblock %}
@@ -9,11 +10,11 @@
 
 <div class="container">
     <h1 class="my-4">Pflanzenübersicht</h1>
-
+    <!--Bereich und Layout für Warnung festlegen und je nach Bedingung anlegen-->
     {% if low_water_warning %}
         <div class="alert alert-danger" role="alert">
             Achtung: Der Wasserstand der folgenden Pflanzen ist unter 10%:
-            <ul>
+            <ul> <!--Listenelement pro Pflanze mit Warnung hinzufügen-->
                 {% for plant_name in low_water_plants %}
                     <li>{{ plant_name }}</li>
                 {% endfor %}
@@ -21,6 +22,7 @@
         </div>
     {% endif %}
 
+    <!--Karte mit Pflanzenübersicht pro Pflanze anlegen-->
     <div class="row">
         {% for i in plants %}
             <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
@@ -62,9 +64,5 @@
         <a href="{{ url_for('pflanze_hinzufuegen') }}" class="btn btn-primary">Neue Pflanze hinzufügen</a>
     </div>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, session, flash
+from flask import Blueprint, render_template
 from db_model import db, Pflanze, Messdaten
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
@@ -34,6 +34,7 @@ def overview():
 # Funktion, um allgemeine Daten einer Pflanze anhand der MAC-Adresse abzurufen
 def getGeneralData(macAdd):
     data = db.session.query(Pflanze).filter(Pflanze.MAC_Adresse == macAdd).first()  # Pflanzendaten aus der Datenbank
+    # in Dictonary umwandeln
     generalPlantData = {
         'name': data.Name,
         'mac': data.MAC_Adresse,
@@ -58,11 +59,14 @@ def getMeasurementDataHist(macAdd):
     now = datetime.now()
     timewindow = now - timedelta(hours=72)  # Zeitfenster der letzten 72 Stunden berechnen
     data = []
+    # Datenbankabfrage
     measurementData = db.session.query(Messdaten).join(Pflanze).filter(
         Messdaten.Pflanzen_ID == macAdd,
         Messdaten.Zeitstempel <= now,
         Messdaten.Zeitstempel >= timewindow
     ).all()
+
+    #Daten aus DB-Ergebnisarry in Dictonary speichern, um über Schlüssel auf Werte zugreifen zu können
     for element in measurementData:
         newData = {
             'zeitstempel': element.Zeitstempel,
@@ -77,6 +81,7 @@ def getMeasurementDataHist(macAdd):
 # Funktion, um die aktuellsten Messdaten einer Pflanze abzurufen
 def getMeasurementDataNow(macAdd):
     now = datetime.now()
+    # Datenbankabfrage, des zuletzt gespeicherten Messdatensatz
     element = db.session.query(Messdaten).join(Pflanze).filter(
         Messdaten.Pflanzen_ID == macAdd,
         Messdaten.Zeitstempel <= now
