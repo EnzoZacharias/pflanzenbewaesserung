@@ -53,7 +53,7 @@ def send_email(water_level, plant_name="Unbekannt"):
         )
     )
     try:
-        mail.send(msg)
+        # mail.send(msg) # Einfügen, wenn Email versendet werden soll
         print("E-Mail erfolgreich gesendet.")
     except Exception as e:
         print(f"Fehler beim Senden der E-Mail: {e}")
