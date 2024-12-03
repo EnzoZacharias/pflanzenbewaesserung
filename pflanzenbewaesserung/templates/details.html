@@ -1,6 +1,7 @@
-{% extends "default.html" %}
+{% extends "default.html" %}   <!--Detailansicht erweitert das Defaullayout-->
 
 {% block header %}
+    <!--Einbinden zusätzlicher Skripte für QR-Code und Graphen sowie CSS Referenz-->
     <title>{{ generalData['name'] }} - Details</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/qrcodeGenerator.min.js"></script>
@@ -9,6 +10,7 @@
 
 {% block content %}
 <div class="container my-5">
+    <!--Seitenüberschrift und Zurückbutton anlegen-->
     <div class="row">
         <div class="col-md-4">
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Zurück zur Übersicht</a>
@@ -18,6 +20,7 @@
         </div>
     </div>
 
+    <!--Steckbriefdaten und Bild anlegen-->
     <div class="row align-items-stretch">  
         <div class="col-md-4">
             <div class="card h-100 d-flex">
@@ -38,6 +41,8 @@
             </ul>
         </div>
     </div>
+    
+    <!--Wasserstandanzeige und manuelle Bewässerung anlegen-->
     <div class="row my-5">
         <div class="col-md-12 d-flex align-items-center">
             <p class="water-level-text me-3"><strong>Wasserstand:</strong></p>
@@ -49,6 +54,8 @@
           
         </div>
     </div>
+    
+    <!--Livedatenfelder anlegen-->
     <div class="row my-4 text-center">
         <div class="col-md-3">
             <div class="card temperature-card custom-card mb-3">
@@ -88,6 +95,7 @@
         </div>
     </div>
 
+    <!--Bereich für die Graphen festlegen-->
     <div class="row mt-5">
         <div class="col-md-6">
             <canvas id="temperatureChart"></canvas>
@@ -102,6 +110,8 @@
             <canvas id="sunItensityChart"></canvas>
         </div>
     </div>
+    
+    <!--QR-Codefeld anlegen-->
     <div class="row mt-5">
         <div class="col-md-12 d-flex align-items-center">
             <div class="ms-5" id="qrCodeContainer"></div>
@@ -110,106 +120,118 @@
 </div>
 
 <script>
+    //Übergabeparameter measurementDataHist etc.(Übergebenes Python-Dictonary) in JSON-Format konvertieren (Jinja-Filter) und in JavaScript-Variable abspeichern
     const measurementDataHist = {{ measurementDataHist | tojson }};
     const measurementDataNow = {{ measurementDataNow | tojson }};
     const generalData = {{ generalData | tojson }};
 
-    function filterDataForDayAndNight(data) {
-    const aggregatedData = [];
-    const aggregatedLabels = [];
-    const hourlyGroups = {};
+    // ----------------------------------Hilfsfunktionen --------------------------------------
 
-    // Daten nach Stunde gruppieren
-    data.forEach(entry => {
-        const timestamp = new Date(entry.zeitstempel);
-        const hourKey = `${timestamp.getUTCFullYear()}-${timestamp.getUTCMonth() + 1}-${timestamp.getUTCDate()} ${timestamp.getUTCHours()}`;
+     //Funktion, welche den Durschnitt der übergebenen Werte bildet
+    function average(values) {
+        return values.reduce((sum, val) => sum + val, 0) / values.length;
+    }
 
-        if (!hourlyGroups[hourKey]) {
-            hourlyGroups[hourKey] = { Temp: [], air: [], ground: [], sun: [] };
-        }
-
-        // Werte zur Stunde hinzufügen
-        hourlyGroups[hourKey].Temp.push(entry.Temp);
-        hourlyGroups[hourKey].air.push(entry.air);
-        hourlyGroups[hourKey].ground.push(entry.ground);
-        hourlyGroups[hourKey].sun.push(entry.sun);
-    });
-
-
-    // Fehlende Stunden füllen
-    const startTimestamp = new Date(data[0].zeitstempel);
-    const endTimestamp = new Date(data[data.length - 1].zeitstempel);
-
-    for (let d = new Date(startTimestamp); d <= endTimestamp; d.setHours(d.getHours() + 1)) {
-        const hourKey = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()} ${d.getUTCHours()}`;
-        aggregatedLabels.push(hourKey);
-
-        if (hourlyGroups[hourKey]) {
-            aggregatedData.push({
-                Temp: average(hourlyGroups[hourKey].Temp),
-                air: average(hourlyGroups[hourKey].air),
-                ground: average(hourlyGroups[hourKey].ground),
-                sun: average(hourlyGroups[hourKey].sun),
-            });
+    //Funktion, welche die Farben der Live-Datenkästen auf Basis der Grenzwerte bestimmt
+    function setCardColor(value, min, max) {
+        const range = max - min;
+        const tenPercentRange = range * 0.1; //10% Abweichung bestimmen
+        if (value < min - tenPercentRange || value > max + tenPercentRange) {
+            return "bg-danger"; //gelbe Farbe bei 10% Abweichung vom Optimalwert
+        } else if (value < min || value > max) {
+            return "bg-warning"; //rote Farbe
         } else {
-            aggregatedData.push({ Temp: null, air: null, ground: null, sun: null });
+            return "bg-success"; //grüne Farbe
         }
     }
 
-    console.log("Aggregated Labels:", aggregatedLabels);
-    console.log("Aggregated Data:", aggregatedData);
-    return { labels: aggregatedLabels, data: aggregatedData };
-}
+    // Funktion zum Aggregieren von Daten pro Stunde
+    function filterDataForDayAndNight(data) {
+        const aggregatedData = [];
+        const aggregatedLabels = [];
+        const hourlyGroups = {};
 
-function average(values) {
-    return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : null;
-}
+        // Daten nach Stunde gruppieren
+        data.forEach(entry => {
+            const timestamp = new Date(entry.zeitstempel); //Gesamtzeitstempel speichern
+            const hourKey = `${timestamp.getUTCFullYear()}-${timestamp.getUTCMonth() + 1}-${timestamp.getUTCDate()} ${timestamp.getUTCHours()}`; //nur Datum und Stunde von Zeitstempel speichern
 
-function setCardColor(value, min, max) {
-    const range = max - min;
-    const tenPercentRange = range * 0.1;
-    if (value < min - tenPercentRange || value > max + tenPercentRange) {
-        return "bg-danger";
-    } else if (value < min || value > max) {
-        return "bg-warning";
-    } else {
-        return "bg-success";
-    }
-}
+            //neuen Arrayeintrag für die Stunde anfügen, falls die Stunde noch nicht enthalten ist
+            if (!hourlyGroups[hourKey]) {
+                hourlyGroups[hourKey] = {
+                    Temp: [],
+                    air: [],
+                    ground: [],
+                    sun: [],
+                };
+            }
 
-function createChart(chartId, label, labels, data, borderColor) {
-    new Chart(document.getElementById(chartId), {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: label,
-                    data: data,
-                    fill: false,
-                    borderColor: borderColor,
-                    tension: 0.1,
-                    // spanGaps: true, // Interpolation von Lücken
+            //Datenpunkt in den jeweiligen Arrayfall nach Stunde gruppieren
+            hourlyGroups[hourKey].Temp.push(entry.Temp);
+            hourlyGroups[hourKey].air.push(entry.air);
+            hourlyGroups[hourKey].ground.push(entry.ground);
+            hourlyGroups[hourKey].sun.push(entry.sun);
+        });
+
+        // Fehlende Stunden füllen
+        const startTimestamp = new Date(data[0].zeitstempel);
+        const endTimestamp = new Date(data[data.length - 1].zeitstempel);
+
+        // Label und Daten pro Stunde abspeichern. Label nur alle 6 Stunden konkret abspeichern, sonst Leerzeichen
+        for (let d = new Date(startTimestamp); d <= endTimestamp; d.setHours(d.getHours() + 1)) {
+            const hourKey = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()} ${d.getUTCHours()}`; //Zeitstempel ohne Stundeneinheit
+            const label = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()} ${d.getUTCHours()}h`; //Zeitstempel mit Stundeneinheit
+            
+            // Prüfe, ob der Zeitpunkt eine Markierung benötigt (z.B. 00:00 oder 12:00)
+            if (d.getUTCHours() === 0 || d.getUTCHours() === 12 || d.getUTCHours() === 6 || d.getUTCHours() === 18) {
+                aggregatedLabels.push(label); // Speichert das Label 
+            } else {
+                aggregatedLabels.push(""); // Fügt ein leeres Label hinzu
+            }
+            
+            // Durchschnittswerte werden für jede Stunde berechnet, unabhängig vom Label
+            if (hourlyGroups[hourKey]) {
+                aggregatedData.push({
+                    Temp: average(hourlyGroups[hourKey].Temp),
+                    air: average(hourlyGroups[hourKey].air),
+                    ground: average(hourlyGroups[hourKey].ground),
+                    sun: average(hourlyGroups[hourKey].sun),
+                });
+            } else { //kein Wert für die Stunde in DB --> null-Werte speichern
+                aggregatedData.push({
+                    Temp: null,
+                    air: null,
+                    ground: null,
+                    sun: null,
+                    });
                 }
-            ]
+            }
+
+        return { labels: aggregatedLabels, data: aggregatedData };
         }
-    });
-}
 
-// Verarbeitung der Daten und Erstellung der Diagramme
-document.addEventListener("DOMContentLoaded", function () {
+    // Generische Funktion für die Erstellung von Charts
+    function createChart(chartId, label, labels, data, borderColor) {
+        new Chart(document.getElementById(chartId), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: label,
+                        data: data,
+                        fill: false,
+                        borderColor: borderColor,
+                        tension: 0.1
+                    }
+                ]
+            }
+        });
+    }
+//---------------------------------Hilfsfunktionen Ende--------------------------------------------
+
+    // Daten filtern und aggregieren
     const filteredData = filterDataForDayAndNight(measurementDataHist);
-
-    const temperatureChartData = filteredData.data.map(item => item.Temp);
-    const airHumidityChartData = filteredData.data.map(item => item.air);
-    const groundMoistureChartData = filteredData.data.map(item => item.ground);
-    const sunChartData = filteredData.data.map(item => item.sun);
-
-    // Charts erstellen
-    createChart('temperatureChart', 'Umgebungstemperatur (°C)', filteredData.labels, temperatureChartData, 'rgb(255, 99, 132)');
-    createChart('humidityChart', 'Luftfeuchtigkeit (%)', filteredData.labels, airHumidityChartData, 'rgb(54, 162, 235)');
-    createChart('moistureChart', 'Bodenfeuchtigkeit (%)', filteredData.labels, groundMoistureChartData, 'rgb(75, 192, 192)');
-    createChart('sunItensityChart', 'Sonnenintensität (%)', filteredData.labels, sunChartData, 'rgb(255, 255, 0)');
 
     // Kartenfarben aktualisieren
     document.querySelector('.temperature-card').classList.add(
@@ -225,8 +247,28 @@ document.addEventListener("DOMContentLoaded", function () {
         setCardColor(measurementDataNow['sun'], generalData['sunInt_min'], generalData['sunInt_max'])
     );
 
+    // Event-Listener für manuellen Button
+    document.getElementById('manualWaterButton').addEventListener('click', () => {
+        console.log('Manuelles Bewässern gestartet');
+        socket.emit('manual_water', { mac: generalData['mac'] });
+    });
+
+    
+    // Daten für Charts extrahieren
+    const temperatureChartData = filteredData.data.map(item => item.Temp);
+    const airHumidityChartData = filteredData.data.map(item => item.air);
+    const groundMoistureChartData = filteredData.data.map(item => item.ground);
+    const sunChartData = filteredData.data.map(item => item.sun);
+
+    // Charts erstellen
+    createChart('temperatureChart', 'Umgebungstemperatur (°C)', filteredData.labels, temperatureChartData, 'rgb(255, 99, 132)');
+    createChart('humidityChart', 'Luftfeuchtigkeit (%)', filteredData.labels, airHumidityChartData, 'rgb(54, 162, 235)');
+    createChart('moistureChart', 'Bodenfeuchtigkeit (%)', filteredData.labels, groundMoistureChartData, 'rgb(75, 192, 192)');
+    createChart('sunItensityChart', 'Sonnenintensität (%)', filteredData.labels, sunChartData, 'rgb(255, 255, 0)');
+
+    // Debugging-Logs
+    console.log("MeasurementDataHist:", measurementDataHist);
     console.log("Filtered Data:", filteredData);
-});
 </script>
  
 <script>
@@ -237,19 +279,20 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('Verbunden mit dem SocketIO-Server'); // Verbindung bestätigen
     });
     
+    //hört auf Reload Ereignis ("reload_page")
     socket.on('reload_page', (data) => {
         console.log('Reload-Seitenereignis empfangen:', data); // Überprüfe, ob die Nachricht empfangen wird
-        location.reload();
+        location.reload(); //Seite neu laden
     });
  
 </script>
 <script>
-    
+    //Hilfsfunktion zum Generieren des QR-Codes
     function generator () {
         var url = "{{ url | safe }}"; //Übergebene Url-Parameter unverändert laden
         const qrCodeOutput = document.getElementById('qrCodeContainer');
-        var outputElementWidth = qrCodeOutput.offsetWidth;
-        outputElementWidth = outputElementWidth +100 ; 
+        var outputElementWidth = qrCodeOutput.offsetWidth; //Größe des qr-Codeelements ermitteln
+        outputElementWidth = outputElementWidth +100 ; //Größe anpassen
         //qrCodeOutput.innerHTML = " ";  // letzten QR-Code resetten
          
         //neuen QR-Code erstellen

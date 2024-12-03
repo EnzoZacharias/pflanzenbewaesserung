@@ -1,4 +1,4 @@
-{% extends "default.html" %}
+{% extends "default.html" %} <!--erweiter Default Layout-->
 
 {% block title %}Neue Pflanze hinzufügen{% endblock %}
 
@@ -6,6 +6,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pflanze_hinzufuegen.css') }}">
 {% endblock %}
 
+<!--Formular erstellen zum Hinzufügen neuer Pflanzen in die Datenbank-->
 {% block content %}
 <h1>Neue Pflanze hinzufügen</h1>
 <form method="post" class="mb-3" enctype="multipart/form-data">
