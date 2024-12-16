@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mail import Mail, Message
-from db_model import db, Pflanze, Messdaten, get_name_by_plant_id
+from db_model import db, Pflanze, Messdaten, get_name_by_plant_id, get_Bodenfeuchtigkeit_min_by_plant_id
 from app_plant import plant, getPlants
 from datetime import datetime
 from mqtt_communication import setup_mqtt, mqtt_client, MQTT_TOPIC
@@ -66,6 +66,8 @@ setup_mqtt(app)
 def after_insert(mapper, connection, target):
     plant_id = target.Pflanzen_ID
     name = get_name_by_plant_id(plant_id)
+    min_water_level = get_Bodenfeuchtigkeit_min_by_plant_id(plant_id)
+    
     # Überprüfung des Wasserstands
     if target.Wasserstand is not None and target.Wasserstand < 10:
         if plant_id not in email_sent_status or not email_sent_status[plant_id]:
@@ -74,7 +76,7 @@ def after_insert(mapper, connection, target):
     else:
         email_sent_status[plant_id] = False
     # Überprüfung der Bodenfeuchtigkeit und ggf. automatisches Bewässern
-    if target.Bodenfeuchtigkeit is not None and target.Bodenfeuchtigkeit < 10:
+    if target.Bodenfeuchtigkeit is not None and target.Bodenfeuchtigkeit < min_water_level:
         if plant_id not in watering_triggered_status or not watering_triggered_status[plant_id]:
             message = json.dumps({"action": "water"})
             mqtt_client.publish("manuel_watering", message)

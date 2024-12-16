@@ -105,7 +105,12 @@ class Messdaten(db.Model):
         db.session.commit()
         return new_messdaten
 
+
 # Hilfsfunktion, um den Namen einer Pflanze anhand ihrer MAC-Adresse zu erhalten
 def get_name_by_plant_id(plant_id):
     plant = Pflanze.query.filter_by(MAC_Adresse=plant_id).first()
     return plant.Name
+
+def get_Bodenfeuchtigkeit_min_by_plant_id(plant_id):
+    plant = Pflanze.query.filter_by(MAC_Adresse=plant_id).first()
+    return plant.Bodenfeuchtigkeit_min
