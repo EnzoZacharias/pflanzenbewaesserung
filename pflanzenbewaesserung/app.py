@@ -143,6 +143,13 @@ def pflanze_hinzufuegen():
         return redirect(url_for('index'))
     return render_template('pflanze_hinzufuegen.html')
 
+@socketio.on('manual_water')
+def handle_manual_water(data):
+    message = json.dumps({"action": "water"})
+    mqtt_client.publish("manuel_watering", message)
+    Pflanze.update_zuletztGegossen(data['mac'])
+    print(f"Manuelle Bewässerung gestartet")
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Datenbank initialisieren
